@@ -1,126 +1,43 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-const bcrypt = require('bcrypt');
+const Model = require("./model");
 const Joi = require('@hapi/joi');
 
-/*  A user is anyone who is logged in, admins, devlopers, agents, etc
- *   the accType or account type feild dictates the privlges that user has
- */
-const userSchema = new Schema(
-  {
-    avatar: {
-      type: String,
-    },
-    accType: {
-      type: String,
-      required: true,
-    },
-    firstName: {
-      type: String,
-      required: true,
-    },
-    lastName: {
-      type: String,
-      required: true,
-    },
-    mobileNo: {
-      type: String,
-      required: false,
-    },
-    phoneNo: {
-      type: String,
-      required: true,
-    },
-    email: {
-      type: String,
-      lowercase: true,
-      unique: true,
-      required: true,
-      validate: [],
-    },
-    verified: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
-    password: {
-      type: String,
-      required: true,
-    },
-    jobType: {
-      type: String,
-    },
-    licence: {
-      type: String,
-      unique: true,
-      required: true,
-    },
-    verifiedLicence: {
-      type: Boolean,
-      default: false,
-      required: true,
-    },
-    group: {
-      type: Schema.Types.ObjectId,
-      ref: 'Group',
-    },
-    company: {
-      type: String,
-      required: true,
-    },
-    addressLine1: {
-      type: String,
-    },
-    addressLine2: {
-      type: String,
-    },
-    city: {
-      type: String,
-    },
-    country: {
-      type: String,
-    },
-    postcode: {
-      type: String,
-    },
-    favorites: {
-      default: {
-        listings: [],
-        projects: [],
-      },
-      type: {
-        listings: [String],
-        projects: [String],
-      },
-    },
-  },
-  { timestamps: true }
-);
+class UserModel extends Model {
+  table = 'users';
+  hidden = ['password']
 
-//static signup method
-userSchema.statics.signup = async (
-  accType,
-  firstName,
-  lastName,
-  phoneNo,
-  email,
-  password
-) => {
-  const exists = await this.findOne({ email });
+  createSchema = Joi.object().keys({
+    first_name: Joi.string().required(),
+    last_name: Joi.string().required(),
+    mobile_no: Joi.string().optional(),
+    phone_no: Joi.string().required(),
+    role: Joi.string().required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().required(),
+    group_id: Joi.number().optional(),
+    company: Joi.string().optional(),
+    address_line_1: Joi.string(),
+    address_line_2: Joi.string(),
+    suburb: Joi.string(),
+    country: Joi.string(),
+    postcode: Joi.string(),
+  });
 
-  if (exists) {
-    throw Error('Email already in use');
-  }
-};
+  updateSchema = Joi.object().keys({
+    first_name: Joi.string().required(),
+    last_name: Joi.string().required(),
+    mobile_no: Joi.string().optional(),
+    phone_no: Joi.string().required(),
+    role: Joi.string().required(),
+    password: Joi.string().optional(),
+    email: Joi.string().email().required(),
+    group_id: Joi.number().optional(),
+    company: Joi.string().optional(),
+    address_line_1: Joi.string(),
+    address_line_2: Joi.string(),
+    suburb: Joi.string(),
+    country: Joi.string(),
+    postcode: Joi.string(),
+  });
+}
 
-// hash the password
-userSchema.methods.generateHash = function (password) {
-  return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
-};
-
-// checking if password is valid
-userSchema.methods.validPassword = function (password) {
-  return bcrypt.compareSync(password, this.password);
-};
-
-module.exports = mongoose.model('User', userSchema);
+module.exports = new UserModel();

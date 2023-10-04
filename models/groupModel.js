@@ -1,34 +1,28 @@
-const mongoose = require('mongoose')
-const Schema = mongoose.Schema
+const Model = require("./model");
+const Joi = require('@hapi/joi');
 
-const groupSchema = new Schema({
-  groupType: {
-    type: String,
-    required: true
-  },
-  groupLicence: {
-    type: String,
-    unique: true,
-    required: [true, 'Please enter a group licence number']
-  },
-  groupName: {
-    type: String,
-    required: true
-  },
-  groupContact: {
-    type: String,
-  },
-  groupEmail: {
-    type: String,
-  },
-  groupArea: {
-    type: String,
-  },
-  groupParentId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Group',
-    default: null,
-  }
-}, { timestamps: true })
+class GroupModel extends Model {
+  table = 'user_groups';
 
-module.exports = mongoose.model('Group', groupSchema)
+  createSchema = Joi.object().keys({
+    name: Joi.string().required(),
+    email: Joi.string().email().required(),
+    contact: Joi.string().optional(),
+    license: Joi.string().required(),
+    area: Joi.string().required(),
+    type: Joi.string().required(),
+    parent_id: Joi.optional(),
+  });
+
+  updateSchema = Joi.object().keys({
+    name: Joi.string().required(),
+    email: Joi.string().required(),
+    contact: Joi.string().optional(),
+    license: Joi.string().optional(),
+    area: Joi.string().required(),
+    parent_id: Joi.optional(),
+    type: Joi.string().required(),
+  });
+}
+
+module.exports = new GroupModel();
