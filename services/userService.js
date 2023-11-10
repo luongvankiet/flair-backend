@@ -5,7 +5,7 @@ const httpErrors = require('http-errors');
 const util = require('../utils/pagination');
 
 module.exports = {
-  async getAll() {
+  async getAll(queryParams) {
     try {
       return util.emptyOrRows(await User.getAll());
     } catch (error) {
@@ -37,13 +37,38 @@ module.exports = {
     }
   },
 
+  async getOne(fields) {
+    try {
+      const user = await User.getOne(fields);
+
+      if (!user) {
+        throw httpErrors.UnprocessableEntity('User not found');
+      }
+
+      return user;
+    } catch (error) {
+      throw error
+    }
+  },
+
   async create(body) {
     try {
       const validatedRequest = await User.createSchema.validateAsync(body);
 
       const existingUser = await User.getOne({ email: validatedRequest.email });
+
       if (existingUser) {
-        throw httpErrors.UnprocessableEntity(`${validatedRequest.email} is already exist!`);
+        throw httpErrors.UnprocessableEntity(`Email ${validatedRequest.email} is already exist!`);
+      }
+
+      if (validatedRequest.license) {
+        const existingLicense = await User.getOne({ license: validatedRequest.license })
+
+        if (existingLicense) {
+          throw httpErrors.BadRequest(`License Number ${license} is already exist!`);
+        }
+
+        validatedRequest.verified_license_at = new Date();
       }
 
       validatedRequest.password = await bcrypt.hash(validatedRequest.password, 10);
@@ -121,5 +146,21 @@ module.exports = {
     } catch (error) {
       throw error;
     }
-  }
+  },
+
+  async deleteMany(ids) {
+    try {
+      const user = await User.getById(ids);
+
+      if (!user) {
+        throw httpErrors.NotFound('User not found');
+      }
+
+      await User.deleteMany(ids)
+
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  },
 }

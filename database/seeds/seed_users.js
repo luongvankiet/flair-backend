@@ -16,6 +16,7 @@ exports.seed = async function (knex) {
       phone_no: '0987654321',
       password: password,
       role: 'admin',
+      verified_email_at: new Date(),
     },
     {
       first_name: 'John',
@@ -23,7 +24,6 @@ exports.seed = async function (knex) {
       email: 'johndoe@example.com',
       phone_no: '0987654321',
       password: password,
-      group_id: 1,
     },
   ]);
 };

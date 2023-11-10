@@ -7,20 +7,20 @@ class GroupModel extends Model {
   createSchema = Joi.object().keys({
     name: Joi.string().required(),
     email: Joi.string().email().required(),
-    contact: Joi.string().optional(),
+    contact: Joi.string().optional().allow(null, ''),
     license: Joi.string().required(),
     area: Joi.string().required(),
     type: Joi.string().required(),
-    parent_id: Joi.optional(),
+    parent_id: Joi.optional().allow(null, ''),
   });
 
   updateSchema = Joi.object().keys({
     name: Joi.string().required(),
     email: Joi.string().required(),
-    contact: Joi.string().optional(),
-    license: Joi.string().optional(),
+    contact: Joi.string().optional().allow(null, ''),
+    license: Joi.string().required().allow(null, ''),
     area: Joi.string().required(),
-    parent_id: Joi.optional(),
+    parent_id: Joi.optional().allow(null, ''),
     type: Joi.string().required(),
   });
 }

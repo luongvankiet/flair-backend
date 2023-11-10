@@ -52,6 +52,22 @@ class Model {
     return this.getAttributes(row);
   }
 
+  async getMany(fields) {
+    let query = `SELECT * FROM ${this.table} WHERE 1=1`;
+
+    const values = [];
+    if (fields) {
+      const columns = Object.keys(fields);
+
+      columns.forEach(column => {
+        query += ` AND ${column} LIKE ?`;
+        values.push(fields[column]);
+      });
+    }
+
+    return await db.query(query, values).map(row => this.getAttributes(row));
+  }
+
   async getPaginatedList(page, perPage = 20) {
     const offset = (page - 1) * perPage;
 
@@ -71,6 +87,10 @@ class Model {
   }
 
   async delete(obj) {
+    return await db.query(`DELETE FROM ${this.table} WHERE id = ?`, obj.id);
+  }
+
+  async deleteMany(obj) {
     return await db.query(`DELETE FROM ${this.table} WHERE id = ?`, obj.id);
   }
 

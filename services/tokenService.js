@@ -105,7 +105,7 @@ module.exports = {
       await userModel.update(updatedUser);
       await tokenModel.delete(existingToken);
 
-      return true;
+      return updatedUser;
     } catch (error) {
       throw error;
     }

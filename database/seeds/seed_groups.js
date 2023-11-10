@@ -21,7 +21,6 @@ exports.seed = async function (knex) {
       area: 'Paramatta',
       license: 'license1',
       type: 'agent',
-      parent_id: 1,
     },
     {
       name: 'Group 2',

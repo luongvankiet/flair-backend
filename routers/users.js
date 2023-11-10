@@ -54,4 +54,6 @@ router.put('/:id', userController.update);
  */
 router.delete('/:id', userController.delete);
 
+router.post('/delete-many', userController.deleteMany);
+
 module.exports = router;

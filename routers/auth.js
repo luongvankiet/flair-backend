@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const authController = require('../controllers/authController')
+const authController = require('../controllers/authController');
+const { verifyAccessToken } = require('../utils/token');
 
 /**
  * @description login
@@ -28,6 +29,10 @@ router.post('/login', authController.login);
  */
 router.post('/register', authController.register);
 
+router.get('/current-user', verifyAccessToken, authController.getCurrentUser);
+
 router.get('/verify-email', authController.verifyEmail)
+
+router.post('/verify-license', authController.verifyLicense)
 
 module.exports = router;

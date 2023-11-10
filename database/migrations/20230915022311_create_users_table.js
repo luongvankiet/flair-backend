@@ -12,6 +12,14 @@ exports.up = function (knex) {
     table.string('email').notNullable().unique();
     table.string('password').notNullable();
     table.string('role').nullable();
+    table.string('license').nullable();
+    table.string('account_type').nullable();
+    table.string('company').nullable();
+    table.string('address_line_1').nullable();
+    table.string('address_line_2').nullable();
+    table.string('suburb').nullable();
+    table.string('country').nullable();
+    table.string('postcode').nullable();
     table.timestamp('verified_license_at').nullable();
     table.timestamp('verified_email_at').nullable();
     table.integer('group_id')

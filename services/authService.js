@@ -6,6 +6,7 @@ const userService = require('../services/userService');
 const tokenService = require('../services/tokenService');
 const { getEmailTemplate } = require('../utils/emailTemplate');
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 
 module.exports = {
   async login(loginCredentials) {
@@ -30,7 +31,7 @@ module.exports = {
 
       const { access_token, payload } = await token.signAccessToken(user.id, user.email, user.accType);
 
-      return { access_token, payload }
+      return { access_token, user: payload }
     } catch (error) {
       throw error;
     }
@@ -44,8 +45,8 @@ module.exports = {
         return null;
       }
 
-      this.sendVerifyEmail(user);
-      throw httpErrors.Unauthorized('An email has sent to your email address. Please verify your account before login!');
+      this.sendVerifyEmail(newUser);
+      return newUser;
     } catch (error) {
       throw error;
     }
@@ -83,4 +84,98 @@ module.exports = {
       throw error;
     }
   },
+
+  async getAccessTokenFromNSWApi(role) {
+    try {
+      const token = ['agent', 'agency', 'assistant agent'].includes(role)
+        ? process.env.NSW_API_PROPERTY_AUTHORIZATION_HEADER
+        : process.env.NSW_API_CONTRACTOR_AUTHORIZATION_HEADER
+
+      const response = await axios.get('https://api.onegov.nsw.gov.au/oauth/client_credential/accesstoken', {
+        params: { grant_type: 'client_credentials' },
+        headers: {
+          'Authorization': token,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return response.data.access_token;
+    } catch (error) {
+      console.log(error);
+      throw error
+    }
+  },
+
+  async verifyLicense(role, token, license) {
+    try {
+      const isAgency = ['agent', 'agency', 'assistant agent'].includes(role);
+      if (!token) {
+        throw httpErrors.UnprocessableEntity('Invalid License Number');
+      }
+
+      const url = isAgency
+        ? 'https://api.onegov.nsw.gov.au/propertyregister/v1/verify'
+        : 'https://api.onegov.nsw.gov.au/tradesregister/v1/verify';
+
+      const apiKey = isAgency
+        ? process.env.NSW_API_PROPERTY_KEY
+        : process.env.NSW_API_CONTRACTOR_KEY;
+
+      const response = await axios.get(url, {
+        params: { licenceNumber: license },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'apikey': apiKey,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+
+      const results = response.data;
+
+      if (!results.length) {
+        throw httpErrors.NotFound('License not found.');
+      }
+
+      let licenceType = '';
+
+      switch (role) {
+        case 'agent':
+          licenceType = 'Property - Individual'
+          break;
+
+        case 'assistant agent':
+          licenceType = 'Property - Certificate'
+          break;
+
+        default:
+          licenceType = 'Property - Corporation'
+          break;
+      }
+
+      if (isAgency) {
+        if (licenceType != results[0].licenceType) {
+          throw httpErrors.BadRequest('Licence type is not matching')
+        }
+      }
+
+      const status = results[0].status;
+
+      switch (status) {
+        case 'Expired':
+          throw httpErrors.UnprocessableEntity('Licence expired')
+          break;
+
+        case 'Current':
+          return results
+
+        default:
+          throw httpErrors.UnprocessableEntity('Licence is not valid')
+          break;
+      }
+
+    } catch (error) {
+      throw (error);
+    }
+  }
 }
